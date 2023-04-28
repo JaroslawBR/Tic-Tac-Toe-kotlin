@@ -2,6 +2,11 @@ package tictactoe
 
 import kotlin.IllegalArgumentException
 
+fun input(): MutableList<MutableList<Char>> {
+    val listTwoD = MutableList(3) {MutableList(3) {' '}}
+    printGame(listTwoD)
+    return listTwoD
+}
 fun printGame(listTwoD: MutableList<MutableList<Char>>) {
 
     println("---------")
@@ -9,25 +14,13 @@ fun printGame(listTwoD: MutableList<MutableList<Char>>) {
     println("---------")
 }
 
-fun main() {
-    val list = input()
-    val (firstCord, secondCord) = read(list)
-    setValue(list, firstCord, secondCord)
+fun catchList(listTwoD: MutableList<MutableList<Char>>, firstCord: Int, secondCord: Int) {
+    if (listTwoD[firstCord][secondCord] == 'X' || listTwoD[firstCord][secondCord] == 'O') throw IllegalStateException("This cell is occupied! Choose another one!")
 }
 
-fun input(): MutableList<MutableList<Char>> {
-    val inputStart = readln()
-    val flatList =  inputStart.toList().map { if (it == '_') ' ' else it }
-    val listTwoD = flatList.chunked(3).map { it.toMutableList() }.toMutableList()
-    printGame(listTwoD)
-    return listTwoD
+fun catchSize(firstCord:Int, secondCord: Int) {
+    if (firstCord < 0 || firstCord > 2 || secondCord < 0 || secondCord > 2) throw UnsupportedOperationException ("Coordinates should be from 1 to 3!")
 }
-
-fun setValue(listTwoD: MutableList<MutableList<Char>>, firstCord: Int, secondCord: Int) {
-    listTwoD[firstCord][secondCord] = 'X'
-        printGame(listTwoD)
-}
-
 
 fun read(list: MutableList<MutableList<Char>> = mutableListOf() ): Pair<Int, Int> {
     val inputGame = readln()
@@ -47,212 +40,117 @@ fun read(list: MutableList<MutableList<Char>> = mutableListOf() ): Pair<Int, Int
         read(list)
     } catch (e : Exception) {
         println("You have to add to 2 numbers")
-        read()
+        read(list)
+    }
+} //read input
+
+fun setValue(listTwoD: MutableList<MutableList<Char>>, firstCord: Int, secondCord: Int, turn: Int = 1) {
+    var tick = 'X'
+    if (turn % 2 == 0)  tick = 'O'
+    listTwoD[firstCord][secondCord] = tick
+    printGame(listTwoD)
+} // set new value in list
+
+fun main() {
+    var turn = 0
+    val list = input() //create empty list 3x3
+    while (true) {
+        val (firstCord, secondCord) = read(list)
+        turn += 1
+        setValue(list, firstCord, secondCord, turn)
+        when (checkGameCondition(list)) {
+            1 -> { println("O wins"); break }
+            2 -> { println("X wins"); break }
+        }
+        if (turn == 9) {println("Draw"); break}
+
+
+
+
     }
 }
 
+fun checkGameCondition(list: MutableList<MutableList<Char>> = mutableListOf()): Int{
+    var rowX = 0
+    var rowO = 0
+    var verticalX = 0
+    var verticalO = 0
+    var diagonalX = 0
+    var diagonalO = 0
+    var diagonalzX = 0
+    var diagonalzO = 0
+    for (x in 0..2) {
+        if (rowO == 3  || rowX == 3) break
+        rowO = 0
+        rowX = 0
+        for (i in 0..2) {
+            when (list[x][i]) {
+                'X' -> rowX += 1
+                'O' -> rowO += 1
+                else -> {
+                    rowO = 0
+                    rowX = 0
+                    break
+                }
+            }
+        }
+    }
+    for (x in 0..2) {
+        if (verticalO == 3  || verticalX == 3) break
+        verticalO = 0
+        verticalX = 0
+        for (i in 0..2) {
+            when (list[i][x]) {
+                'X' -> verticalX += 1
+                'O' -> verticalO += 1
+                else -> {
+                    verticalO = 0
+                    verticalX = 0
+                }
+            }
+        }
+    }
+    diagonalX = 0
+    diagonalO = 0
+    for (i in 0..2) {
+        if (diagonalO == 3  || diagonalX == 3) break
+        when (list[i][i]) {
+            'X' -> diagonalX += 1
+            'O' -> diagonalO += 1
+            else -> {
+                diagonalX = 0
+                diagonalO = 0
+                break
+            }
+        }
+    }
+        for (i in 0..2) {
+            if (diagonalzX == 3 || diagonalzO == 3) break
+            when (list[i][2 - i]) {
+                'X' -> diagonalzX += 1
+                'O' -> diagonalzO += 1
+                else -> {
+                    diagonalzX = 0
+                    diagonalzO = 0
+                    break
+                }
+            }
+        }
 
-
-fun catchList(listTwoD: MutableList<MutableList<Char>>, firstCord: Int, secondCord: Int) {
-    if (listTwoD[firstCord][secondCord] == 'X' || listTwoD[firstCord][secondCord] == 'O') throw IllegalStateException("This cell is occupied! Choose another one!")
+    return when {
+        rowO == 3 || verticalO == 3 || diagonalO == 3 || diagonalzO == 3 -> { 1 }
+        rowX == 3 || verticalX == 3 || diagonalX == 3 || diagonalzX == 3 -> { 2 }
+        else -> 0
     }
 
-fun catchSize(firstCord:Int, secondCord: Int) {
-    if (firstCord < 0 || firstCord > 2 || secondCord < 0 || secondCord > 2) throw UnsupportedOperationException ("Coordinates should be from 1 to 3!")
+
 }
 
-/*
- win(flatList)
-fun win(flatList: List<Char>) {
-    val x = flatList.count { it == 'X' }
-    val o = flatList.count { it == 'O' }
-    var countX = 0
-    var countO = 0
-    var winX = 0
-    var winO = 0
-    if (x == o || x + 1 == o || o + 1 == x) {
-        for (i in 0..2) {
-            if (flatList[i] == 'X') {
-                countX += 1
-            } else {
-                countX = 0
-                break
-            }
-        }
-        if (countX == 3 ) {
-            winX = 1
-        } else for (i in 3..5) {
-            if (flatList[i] == 'X') {
-                countX += 1; println(countX)
-            } else {
-                countX = 0
-                break
-            }
-        }
-        if (countX == 3 && winX == 0) {
-            winX += 1
-        } else for (i in 6..8) {
-            if (flatList[i] == 'X') {
-                countX += 1
-            } else {
-                countX = 0
-                break
-            }
-        }
-        if (countX == 3 && winX == 0) {
-            winX += 1
-        }
 
-        for (i in 0..2) {
-            if (flatList[i] == 'O') {
-                countO += 1
-            } else {
-                countO = 0
-                break
-            }
-        }
-        if (countO == 3) {
-            winO += 1
-        } else for (i in 3..5) {
-            if (flatList[i] == 'O') {
-                countO += 1
-            } else {
-                countO = 0
-                break
-            }
-        }
-        if (countO == 3 && winO == 0) {
-            winO += 1
-        } else for (i in 6..8) {
-            if (flatList[i] == 'O') {
-                countO += 1
-            } else {
-                countO = 0
-                break
-            }
-        }
-        if (countO == 3 && winO == 0) {
-            winO += 1
-        }
-
-
-
-
-        for (i in 0..6 step 3) {
-            if (flatList[i] == 'X') {
-                countX += 1
-            } else {
-                countX = 0
-                break
-            }
-        }
-        if (countX == 3 &&  winX == 0) {
-            winX += 1
-        } else for (i in 1..7 step 3) {
-            if (flatList[i] == 'X') {
-                countX += 1
-            } else {
-                countX = 0
-                break
-            }
-        }
-        if (countX == 3  &&  winX == 0) {
-            winX += 1
-        } else for (i in 2..8 step 3) {
-            if (flatList[i] == 'X') {
-                countX += 1
-            } else {
-                countX = 0
-                break
-            }
-        }
-        if (countX == 3 &&  winX == 0) {
-            winX = +1
-        }
-
-        for (i in 0..6 step 3) {
-            if (flatList[i] == 'O') {
-                countO += 1
-            } else {
-                countO = 0
-                break
-            }
-        }
-        if (countO == 3 &&  winO == 0) {
-            winO = +1
-        } else for (i in 1..7 step 3) {
-            if (flatList[i] == 'O') {
-                countO += 1
-            } else {
-                countO = 0
-                break
-            }
-        }
-        if (countO == 3 &&  winO == 0) {
-            winO = +1
-        } else for (i in 2..8 step 3) {
-            if (flatList[i] == 'O') {
-                countO += 1
-            } else {
-                countO = 0
-                break
-            }
-        }
-        if (countO == 3 &&  winO == 0) {
-            winO = +1
-        }
-
-
-        for (i in 0..8 step 4) {
-            if (flatList[i] == 'X') countX += 1 else {
-                countX = 0
-                break
-            }
-        }
-        if (countX == 3 &&  winX == 0) {
-            winX += 1
-        } else for (i in 2..6 step 2) {
-            if (flatList[i] == 'X') {
-                countX += 1
-            } else {
-                countX = 0
-                break
-            }
-        }
-        if (countX == 3  &&  winX == 0) {
-            winX += 1
-        }
-
-        for (i in 0..8 step 5) {
-            if (flatList[i] == 'O') {
-                countO += 1
-            } else {
-                countO = 0
-                break
-            }
-        }
-        if (countO == 3 &&  winO == 0) {
-            winO = +1
-        } else for (i in 2..6 step 2) {
-            if (flatList[i] == 'O') {
-                countO += 1
-            } else {
-                countO = 0
-                break
-            }
-        }
-        if (countO == 3 &&  winO == 0) {
-            winO = +1
-        }
-
-
-        if (winO > 1 || winX > 1) {
-            println("Impossible")
-        } else if (winX == 1 && winO == 1) {
-            println("Impossible")
-        } else if (winX == 1) println("X wins") else if (winO == 1) println("O wins") else if (x + o != 9) println("Game not finished")
-        else println("Draw")
-    } else println("Impossible")
-} //soo ugly
-*/
-
+fun draw(list: MutableList<MutableList<Char>> = mutableListOf()): Boolean{
+    var empty = false
+    for (i in list) {
+        empty = ' ' in i
+    }
+    return empty
+}
